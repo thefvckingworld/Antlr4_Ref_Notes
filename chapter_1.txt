@@ -1,1 +1,58 @@
+验证Antlr安装(安装方式：jar包下下来，然后设置环境变量)：
+	java org.antlr.v4.Tool  // 在win10下设置alias.bat 其中doskey antlr4=java org.antlr.v4.Tool $* 然后设置注册表，就可以在命令行中使用antlr4了。
+	
+
+运行Antlr并测试识别程序：
+新建Hello.g4文件：
+  grammar Hello; // 定义一个名为Hello的语法
+  r  : 'hello' ID ; // 匹配一个关键词hello和一个紧随其后的标志符
+  ID : [a-z]+ ;     // 匹配小写字符组成的标志符
+  WS : [ \t\r\n]+ -> skip; // 忽略空格、Tab、换行及\r(Windows)
+  
+运行antlr4: antlr4 Hello.g4 生成语法分析器和词法分析器。
+
+运行后得到以下文件:
+Hello.tokens
+HelloBaseListener.java  
+HelloLexer.java
+HelloLexer.tokens
+HelloListener.java
+HelloParser.java
+
+javac *.java // 编译java文件生成class文件
+
+调试工具(先在alias.bat中设置doskey grun=java org.antlr.v4.runtime.misc.TestRig $*)：
+grun Hello r -tokens // 使用Hello语法和r规则启动TestRig，这里是测试Hello语法的r规则
+hello parrt          // 输入要被识别的语句，windows下Ctlr z结束
+
+windows输出(每行输出代表一个词法符号)：
+[@0,0:4='hello',<2>,1:0]    // 第1个单词(@0) 第0到4个字符组成，文本内容是hello, 词法符号类型是<2>，即ID， 位于第1行第0个字符处
+[@1,6:10='parrt',<2>,1:6]
+[@2,13:12='<EOF>',<-1>,2:0]
+line 1:0 missing 'Hello' at 'hello'
+
+grun Hello r -tree // 打印语法分析树
+hello parrt
+
+输出:
+(r Hello parrt) // 语法分析树，根节点合子节点在同一行。
+
+grun Hello r -gui // 使用gui， 后面照常输入，会有gui产生。
+
+-tokens // 打印出词法符号流
+-tree    // 打印出语法分析树
+-gui     // 可视化方式显示语法分析树
+-ps file.ps // 以PostScript格式生成可视化语法分析树，然后将其存储于file.ps
+
+
+
+
+
+
+
+
+
+
+
+
 
