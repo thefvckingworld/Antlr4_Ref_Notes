@@ -1,3 +1,57 @@
+入门的Antlr项目(构造一个语法，C语言子集，识别包裹在花括号或者嵌套在或括号中的一些整数,如{1, 2, 3}, {1, {2, 3}, 4})：
+
+Antlr的jar包中的内容：Antlr工具和Antlr运行库(运行时语法分析)API。
+
+Antlr工具: 使用org.antlr.v4.Tool类生成一些代码(lexer和parser)
+
+Antlr运行库: 由若干类和方法所组成的库，是lexer和parser运行所必须的。
+
+完成该项工作的一般步骤：
+step 1: 写一个语法xx.g4文件
+step 2: 对语法xx.g4文件运行antlr4
+step 3: 将生成的代码与jar包中农的运行库一起编译
+step 4: 将编译好的代码和运行库放在一起运行。
+
+本章小项目语法文件(ArrayInit.g4)：
+
+grammar ArrayInit;  // 必须和文件名匹配，C语言就是grammar C，并且文件名为C.g4
+
+init : '{' value (',' value)* '}' ; // init语法，必须匹配
+
+value : init                        // value可以是嵌套的花括号结构，也可以是一个简单的INT；
+	  | INT
+	  ;
+	  
+// 语法分析器的规则必须以小写字母开头，词法分析器的规则必须用大写字母开头
+INT : [0-9]+ ;                       // 定义词法符号INT，它由一个或多个数字组成
+WS : [ \T\R\N]+ -> skip ;            // 定义词法规则“空白符号”，丢弃之
+
+运行: antlr4 ArrayInit.g4
+
+自动生成了以下文件：
+ArrayInitParser.java          // 语法分析器类的定义，专门用来识别 ArrayInit, public class ArrayInitParser extends Parser {...} 每条规则都有对应的方法。
+ArrayInitLexer.java           // 词法分析器类的定义，public class ArrayInitLexer extends Lexer {...}
+ArrayInit.tokens              // Antlr会将自己定义的词法符号指定一个数字形式的类型，并将对应关系存储于该文件中
+ArrayInitListener.java        // 监听器类，ArrayInitListener接口给出了这些回调方法的定义，可以实现它来完成自定义的果农呢过
+ArrayInitBaseListener.java    // 上述接口的默认实现类，为其中的方法提供了一个空实现，这样使得我们只需要覆盖感兴趣的回调方法。通过-visitor命令行参数，可生tree的产访问器。
+ArrayInitLexer.tokens
+
+测试生成的语法分析器：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 使用监听器将shor数组初始化语句转化为字符串对象。
 
 
 
