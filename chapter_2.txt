@@ -1,1 +1,129 @@
+实现一门编程语言： 构建一个程序，读取输入的语句，对其中的词组和输入符号进行正确的处理。
+
+语言: 由一系列有意义的语句组成，语句由词组组成，词组由更小的子词组和词汇符号组成。
+
+语法/句法：约束语言中的各个组成部分之间关系的规则，是一系列规则的集合，每条规则表述一种词汇结构，通过Antlr语法(Antlr元语言:用来描述其他语言的语法)来指定语言的句法。
+
+词法分析(lexical analysis)：将字符聚集为单词或者符号(词法符号 token)的过程。这种程序叫词法分析器lexer。
+
+语法分析：输入的词法符号被消费以识别语句结构，Antlr生成的语法分析器会建造一种语法分析树(parse tree) 或 句法树(syntax tree)。叶子节点永远是输入的词法符号。
+
+语法分析树的子树的根节点就对应语法规则的名字。
+
+stat
+  |
+  V
+assign
+|  |  |  \ 
+V  V  V   V
+sp = expr ;
+      |
+      V
+     100
+     
+如: assign: sp = expr; // assign就是一个语法规则
+
+实现一个语法分析器(Antlr 递归下降，从语法分析树的根节点开始，朝着叶节点进行解析的过程)：
+
+stat: assign       // 第一个备选分支('|'是备选分支的分隔符)
+      | ifstat     // 第二个备选分支
+      | whilestat  
+     ...
+      ;
+对stat语法规则的解析像是一个switch结构:
+void stat() {
+  switch (《当前输入的词法符号》) {
+    case ID : assign(); break;
+    case IF : stat();   break;
+    case WHILE : whilestat(); break;
+    ...
+    default: 《抛出异常》;
+  } 
+}
+
+前瞻词法符号：下一个输入的词法符号(有时候，需要多个前瞻符号才能判断语义规则的哪个方案是正确的)。
+
+Antlr解决歧义问题的方法是：选择所有匹配的备选分支中的第一条。
+
+使用语法分析树来构建语言类应用程序：操作语法分析器自动生成的语法分析树。
+
+词法分析器 --> 语法分析器：
+CharStream Lexer Token Parser ParseTree(子类：RuleNode(子类如StatContext AssignContext ExprContext等) TerminalNode) TokenStream
+
+
+
+stat(StatContext)
+  |
+  V
+assign(AssignContext)               ===> ruleNode(子树根节点，不会是叶子节点)
+ /  |  \                \ 
+V   V   V                V
+sp  = expr(ExpreContext)  ;
+       |
+       V
+      100                          ===> terminalNode
+    
+ sp = 100;                         ===> CharStrem --> TokenStrem (空白字符丢弃)
+ 
+ 可以利用antlr自动生成并遍历树的机制，而不需要重复编写遍历树的代码。
+ 
+ 语法分析树监听器(将遍历树时触发的事件转化为监听器的调用)：
+  Antlr提供了ParseTreeWalker类，自行实现ParseTreeListener接口，在其中填充自己逻辑代码，从而构建自己的应用。
+  Antlr为每个语法文件生成一个ParseTreeListener的子类，语法的每条规则含enter和exit方法，进入的时候调用enter，访问完该子树后调用exit。
+  
+ 语法分析树访问器(监听器是自动的，访问器是显式的控制)：
+  在命令行中加入-visitor选项制式Antlr为一个语法生成访问器接口。(注：是为一个语法)
+  语法中的每条规则对应接口中的一个visit方法。
+  
+ 实现访问器接口,然后调用这个visit方法来对ParseTree进行一次遍历：
+  ParseTree tree = ...; // tree是语法分析得到的结果
+  MyVisitor v = new MyVisitor();
+  v.visit(tree);
+ 
+ 语法中的每条规则定义了一种词组结构。
+ 
+ 子树的根节点对应了语法规则的名字。树的叶子节点是语句中的符号或者词法符号。
+ 
+ 前向预测：语法分析器使用前向预测来进行决策。将输入的符号与每个备选分支的起始符号进行比较。
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
