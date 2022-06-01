@@ -37,21 +37,140 @@ ArrayInitBaseListener.java    // 上述接口的默认实现类，为其中的�
 ArrayInitLexer.tokens
 
 测试生成的语法分析器：
+step 1: 编译
+	javac *.java
+step 2: 测试
+	grun ArrayInit init -tokens
+	{99, 3, 451} eof                  // 实际输入的数字(后续查看生成的词法是否正确)
+
+step 3: 输出
+	[@0,0:0='{',<1>,1:0]
+	[@1,1:2='99',<4>,1:1]
+	[@2,3:3=',',<2>,1:3]
+	[@3,5:5='3',<4>,1:5]
+	[@4,6:6=',',<2>,1:6]
+	[@5,8:10='451',<4>,1:8]
+	[@6,11:11='}',<3>,1:11]
+	[@7,14:13='<EOF>',<-1>,2:0]
+
+step 4: 查看语法分析树
+	grun ArrayInit init -tree  // 输入 {1, {2, 3}, 4}
+	(init { (value 1) , (value (init { (value 2) , (value 3) })) , (value 4) })
+	
+	grun ArrayInit init -gui   // 输入 {1, {2, 3}, 4}
+	
+	          init                          // 看这颗语法树可以看到，Token都在叶子节点中，而语法都在子树根节点，也即非叶子节点。
+       /     /    /    /    \     \    \            
+      {   value  ,   value  ,   value  }
+            |          |            |     
+            1         init          4 
+                /    /  |  \     \
+               {  value ,  value  }
+                    |        |
+                    2        3 
 
 
+将生成的语法分析器与Java程序集成(下列为测试程序)：
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+
+public class Test {
+
+    public static void main(String[] args) throws Exception{
+        // 新建一个CharStream流，从标准输入读取数据
+        ANTLRInputStream input = new ANTLRInputStream(System.in);
+
+        // 新建一个词法分析器，处理输入的CharStream
+        ArrayInitLexer lexer = new ArrayInitLexer(input);           // 注意：这个类是自动生成的，词法解析器
+
+        // 新建一个词法符号的缓冲区，用于存储词法分析器将生成的词法符号
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        // 新建一个语法分析器，处理词法符号缓冲区中的内容
+        ArrayInitParser parser = new ArrayInitParser(tokens);       // 注意：这个类是自动生成的，语法解析器
+
+        ParseTree tree = parser.init(); // 针对init规则，开始语法分析
+
+        System.out.println(tree.toStringTree(parser));
 
 
+    }
+
+}
+
+编译：上述程序  javac -encoding UTF-8 ArrayInit*.java Test.java
+运行：java Test
+输入：{1, {2, 3}, 4}
+输出：(init { (value 1) , (value (init { (value 2) , (value 3) })) , (value 4) })
+
+构建一个语言类运用程序(能将short数组初始化语句转换为String对象的翻译器):
+
+方案(最简单的)： 使用ANTLR内置的语法分析树遍历器进行深度优先遍历，然后在它触发的一系列回调函数中进行适当的操作。
+
+ANTLR能够自动生成一个监听器接口和一个默认实现的类。
+
+具体实现方式：
+ArrayInitBaseListener类，覆盖其中的方法即可。
+	
+public class ShortToUnicodeString extends ArrayInitBaseListener {
+    @Override
+    public void enterInit(ArrayInitParser.InitContext ctx) {
+        System.out.print('"');
+    }
+
+    @Override
+    public void exitInit(ArrayInitParser.InitContext ctx) {
+        System.out.print('"');
+    }
+
+    @Override
+    public void enterValue(ArrayInitParser.ValueContext ctx) {
+        int value = Integer.valueOf(ctx.INT().getText());
+        System.out.printf("\\u%04x", value);
+    }
+}
+
+// 测试类
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+
+public class Translate {
+
+    public static void main(String[] args) throws Exception {
+        // 新建一个CharStream流，从标准输入读取数据
+        ANTLRInputStream input = new ANTLRInputStream(System.in);
+
+        // 新建一个词法分析器，处理输入的CharStream
+        ArrayInitLexer lexer = new ArrayInitLexer(input);
+
+        // 新建一个词法符号的缓冲区，用于存储词法分析器将生成的词法符号
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        // 新建一个语法分析器，处理词法符号缓冲区中的内容
+        ArrayInitParser parser = new ArrayInitParser(tokens);
+
+        ParseTree tree = parser.init(); // 针对init规则，开始语法分析
+
+        // 新建一个通用的，能够触发回调函数的语法分析树遍历器
+        ParseTreeWalker walker = new ParseTreeWalker();
+
+        // 遍历 语法分析过程中生成的语法分析树，触发回调
+        walker.walk(new ShortToUnicodeString(), tree);
+        System.out.println(); // 翻译完成，打印一个\n
+
+    }
+}
+
+编译：javac -encoding UTF-8 ArrayInit*.java Translate.java
+运行：java Translate
+输入：{99, 3, 451}
+输出："\u0063\u0003\u01c3"
+
+语言应用实现步骤：
+实现监听器的类，然后搞个树的遍历器，将监听器传入即可。
+另外Lexer和parser当然是要有的。
 
 
-
-
-
-
-
-
-
-
-// 使用监听器将shor数组初始化语句转化为字符串对象。
 
 
 
