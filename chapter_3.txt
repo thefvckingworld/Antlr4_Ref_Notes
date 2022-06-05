@@ -89,7 +89,7 @@ public class Test {
         // 新建一个语法分析器，处理词法符号缓冲区中的内容
         ArrayInitParser parser = new ArrayInitParser(tokens);       // 注意：这个类是自动生成的，语法解析器
 
-        ParseTree tree = parser.init(); // 针对init规则，开始语法分析
+        ParseTree tree = parser.init(); // 针对init规则，开始语法分析，注：对应的语法就是一个方法，调用哪个就是从哪个语法进行语法分析。
 
         System.out.println(tree.toStringTree(parser));
 
