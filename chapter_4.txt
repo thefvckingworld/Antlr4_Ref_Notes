@@ -4,6 +4,101 @@ ANTLR语法基本标记：
 3.词法分析器的规则以大写字母开头。
 4.使用|来风格一个语言规则的若干备选分支，使用圆括号把一些符号组合成子规则。
 
+Expr.g4例子，与前面同，唯一有所区别的是测试用例，如下：
+
+import org.antlr.v4.runtime;
+import org.antlr.v4.runtime.tree;
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+public class ExprJoyRide {
+  public static void main(String[] args) {
+    String inputFile = null;
+    if (args.length > 0) inputFile = args[0];
+    InputStream is = System.in;
+    if (inputFile != null) is = new FileInputStream(is);
+    
+    // 字符输入流，词法分析，Token流，语法分析，语法树，输出
+    ANTLRInputStream input = new ANTLRInputStream(is);
+    ExprLexer lexer = new ExprLexer(input);
+    CommonTokenStream tokens = new CommonTokenStream(lexer);
+    ExprParser parser = new ExprParser(tokens);   // 什么语法对应生成什么样的解析器类。
+    ParseTree tree = parser.prog();               // 什么语法对应什么方法。
+    System.out.println(tree.toStringTree(parser)); 
+  }
+}
+
+语法导入：
+将非常大的语法拆分成逻辑单元，拆成语法分析器和词法分析器。
+
+词法规则：CommonLexerRules.g4
+lexer grammar CommonLexerRules;
+ID : [a-zA-Z]+;
+int: [0-9]+;
+NEWLINE: '\r'?'\n';
+WS:  [ \t]+ -> skip;
+
+然后将该词法文件使用import进行导入，如：import CommonLexerRules;
+
+grammar LibExpre;
+import CommonLexerRules;
+ .
+ .
+ .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
